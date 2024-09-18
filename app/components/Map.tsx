@@ -1,44 +1,46 @@
 "use client";
 
-import { useRef } from "react";
-import Script from "next/script";
+import { useState, useEffect } from "react";
+import { Map } from "react-kakao-maps-sdk";
 
 type Lat = number;
 type Lng = number;
 export type Coordinates = [Lat, Lng];
-export type NaverMap = naver.maps.Map;
 
-export default function Map() {
-  const mapRef = useRef<NaverMap | null>(null);
+declare global {
+  interface Window {
+    // eslint-disable-next-line
+    kakao: any;
+  }
+}
 
-  const initialCenter: Coordinates = [37.5262411, 126.99289439];
-  const initialZoom = 14;
-  const mapId = "naver_map";
+export default function KakaoMap() {
+  const [scriptLoad, setScriptLoad] = useState<boolean>(false);
 
-  const initMap = () => {
-    const mapOptions = {
-      center: new window.naver.maps.LatLng(...initialCenter),
-      zoom: initialZoom,
-      minZoom: 9,
-      scaleControl: false,
-      mapDataControl: false,
-      logoControlOptions: {
-        position: naver.maps.Position.BOTTOM_LEFT,
-      },
-    };
+  useEffect(() => {
+    const apiKey: string | undefined = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
+    const script: HTMLScriptElement = document.createElement("script");
 
-    const map = new window.naver.maps.Map(mapId, mapOptions);
-    mapRef.current = map;
-  };
+    script.async = true;
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${apiKey}&autoload=false`;
+    document.head.appendChild(script);
+
+    script.addEventListener("load", () => {
+      setScriptLoad(true);
+    });
+  }, []);
 
   return (
     <>
-      <Script
-        type="text/javascript"
-        src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${process.env.NEXT_PUBLIC_NAVER_API_CLIENT_KEY}`}
-        onLoad={initMap}
-      ></Script>
-      <div id={mapId} style={{ width: "100%", height: "100%" }}></div>
+      {scriptLoad ? (
+        <Map
+          center={{ lat: 37.5262411, lng: 126.99289439 }}
+          style={{ width: "100%", height: "100%", zIndex: 0 }}
+          level={3}
+        ></Map>
+      ) : (
+        <div></div>
+      )}
     </>
   );
 }
