@@ -40,6 +40,11 @@ export default function KakaoMap() {
     });
   }, []);
 
+  const onDragEnd = (map: kakao.maps.Map) => {
+    const latlng = map.getCenter();
+    update(latlng.getLat(), latlng.getLng());
+  };
+
   return (
     <>
       {scriptLoad ? (
@@ -47,6 +52,7 @@ export default function KakaoMap() {
           center={{ lat: latitude, lng: longitude }}
           style={{ width: "100%", height: "100%", zIndex: 0 }}
           level={3}
+          onDragEnd={onDragEnd}
         >
           <MapMarker // 마커를 생성합니다
             position={{
