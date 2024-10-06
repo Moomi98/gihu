@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Map } from "react-kakao-maps-sdk";
+import { Map, MapMarker } from "react-kakao-maps-sdk";
+import coordinateStore from "@/app/stores/coordinate";
 
 type Lat = number;
 type Lng = number;
@@ -15,6 +16,7 @@ declare global {
 }
 
 export default function KakaoMap() {
+  const { latitude, longitude, update } = coordinateStore();
   const [scriptLoad, setScriptLoad] = useState<boolean>(false);
 
   useEffect(() => {
@@ -26,6 +28,14 @@ export default function KakaoMap() {
     document.head.appendChild(script);
 
     script.addEventListener("load", () => {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const { latitude, longitude } = position.coords;
+          update(latitude, longitude);
+        });
+      } else {
+        console.log("error");
+      }
       setScriptLoad(true);
     });
   }, []);
@@ -34,10 +44,18 @@ export default function KakaoMap() {
     <>
       {scriptLoad ? (
         <Map
-          center={{ lat: 37.5262411, lng: 126.99289439 }}
+          center={{ lat: latitude, lng: longitude }}
           style={{ width: "100%", height: "100%", zIndex: 0 }}
           level={3}
-        ></Map>
+        >
+          <MapMarker // 마커를 생성합니다
+            position={{
+              // 마커가 표시될 위치입니다
+              lat: latitude,
+              lng: longitude,
+            }}
+          />
+        </Map>
       ) : (
         <div></div>
       )}
