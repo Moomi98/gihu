@@ -1,5 +1,7 @@
 import styled from "styled-components";
-import SimilarSearchDropDownItem from "@/app/components/SimilarSearchDropDownItem";
+import SimilarSearchDropDownItem, {
+  TOnClickParams,
+} from "@/app/components/SimilarSearchDropDownItem";
 
 const RootContaier = styled.div<{ $height?: number | string }>`
   width: 100%;
@@ -25,12 +27,15 @@ export type TDropdownItem = {
   id: number | string;
   name: string;
   address: string;
+  latitude: number;
+  longitude: number;
 };
 
 type TSimilarSearchDropDownProps = {
   visible: boolean;
   items: TDropdownItem[];
   height?: number | string;
+  onClick?: (params: TOnClickParams) => void;
 };
 
 export default function SimilarSearchDropDown(
@@ -45,6 +50,9 @@ export default function SimilarSearchDropDown(
               id={item.id}
               name={item.name}
               address={item.address}
+              latitude={item.latitude}
+              longitude={item.longitude}
+              onClick={(params: TOnClickParams) => props.onClick?.(params)}
             />
             {idx != props.items.length - 1 && <Br></Br>}
           </ItemContaier>

@@ -1,8 +1,13 @@
 import { get } from "@/app/api/index";
 import { AxiosResponse } from "axios";
 
+export type TCoordinate = {
+  latitude: number;
+  longitude: number;
+};
+
 export type TSearchType = "place" | "address";
-export type TSearchRange = 100 | 200 | 300 | 400 | 500 | 1000 | 2000 | 5000;
+export type TSearchRange = 100 | 200 | 300 | 400 | 500;
 export type TBboxRange = {
   minx: number;
   miny: number;
@@ -10,9 +15,7 @@ export type TBboxRange = {
   maxy: number;
 };
 
-export type TSimilarQueryReq = {
-  latitude: number;
-  longitude: number;
+export type TSimilarQueryReq = TCoordinate & {
   query: string;
   searchType: TSearchType;
   range: TSearchRange; // m 단위
@@ -61,12 +64,18 @@ export type TSimilarQueryRes = {
   result: TVWorldResult;
 };
 
+export type TNearbyFacilityReq = TCoordinate & {
+  range: TSearchRange;
+};
+
 export const getSimilarQuery = (
   req: TSimilarQueryReq
 ): Promise<AxiosResponse<TSimilarQueryRes>> => {
   return get(`/search/similar`, req);
 };
 
-export const getLocationInfo = (location: string) => {
-  return get(`/search?query=${location}`);
+export const getNearbyFacilityInfo = (
+  req: TNearbyFacilityReq
+): Promise<AxiosResponse<TVWorldResultItem[]>> => {
+  return get(`/search`, req);
 };

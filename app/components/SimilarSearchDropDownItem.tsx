@@ -1,5 +1,5 @@
 import styled from "styled-components";
-
+import _ from "lodash";
 const RootContainer = styled.div`
   width: 100%;
   padding: 0.5rem 1rem;
@@ -18,15 +18,18 @@ type TSimilarSearchDropDownItemProps = {
   id: number | string;
   name: string;
   address: string;
-  onClick?: (id: number | string, name: string, address: string) => void;
+  latitude: number;
+  longitude: number;
+  onClick?: (param: TOnClickParams) => void;
 };
+
+export type TOnClickParams = Omit<TSimilarSearchDropDownItemProps, "onClick">;
+
 export default function SimilarSearchDropDownItem(
   props: TSimilarSearchDropDownItemProps
 ) {
   return (
-    <RootContainer
-      onClick={() => props.onClick?.(props.id, props.name, props.address)}
-    >
+    <RootContainer onClick={() => props.onClick?.(_.omit(props, "onClick"))}>
       <Name>{props.name}</Name>
       <Address>{props.address}</Address>
     </RootContainer>

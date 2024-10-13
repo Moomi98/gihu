@@ -1,14 +1,19 @@
 import { ChangeEvent, useState } from "react";
 import styled from "styled-components";
-import { getLocationInfo, getSimilarQuery } from "@/app/api/search";
+import {
+  getNearbyFacilityInfo,
+  getSimilarQuery,
+  TNearbyFacilityReq,
+  TSimilarQueryReq,
+} from "@/app/api/search";
 import coordinateStore from "@/app/stores/coordinate";
-
-import { TSimilarQueryReq } from "@/app/api/search";
 
 import _ from "lodash";
 import SimilarSearchDropDown, {
   TDropdownItem,
 } from "@/app/components/SimilarSearchDropDown";
+
+import { TOnClickParams } from "@/app/components/SimilarSearchDropDownItem";
 
 const RootContainer = styled.div`
   width: 100%;
@@ -66,9 +71,17 @@ export default function SearchBar() {
     TDropdownItem[]
   >([]);
 
-  const searchNearbyPlace = () => {
-    const result = getLocationInfo(text);
-    console.log(result);
+  const searchNearbyPlace = async (
+    text: string,
+    latitude: number,
+    longitude: number
+  ) => {
+    const params: TNearbyFacilityReq = {
+      latitude: longitude,
+      longitude: latitude,
+      range: 300,
+    };
+    return await getNearbyFacilityInfo(params);
   };
 
   const onChange = _.debounce(async (e: ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +94,7 @@ export default function SearchBar() {
       query: value,
       latitude: longitude,
       longitude: latitude,
-      range: 2000,
+      range: 500,
       searchType: getSearchType(value),
     };
     const result = await getSimilarQuery(params);
@@ -91,11 +104,12 @@ export default function SearchBar() {
         ? result.data.result.items.map((item) => ({
             id: item.id,
             name: item.title ?? item.address.road,
-            address: item.address.road,
+            address: item.address.road || item.address.parcel,
+            latitude: Number(item.point.y),
+            longitude: Number(item.point.x),
           }))
         : [];
     setSimilarSearchResult(similarSearchResultItems);
-    console.log(similarSearchResultItems, result);
   }, 1000);
 
   const getSearchType = (query: string) => {
@@ -107,6 +121,18 @@ export default function SearchBar() {
     else return "place";
   };
 
+  const onDropdownItemClicked = (itemInfo: TOnClickParams) => {
+    searchNearbyPlace(itemInfo.name, itemInfo.latitude, itemInfo.longitude);
+  };
+
+  const onSearchButtonClicked = async () => {
+    // TODO 연관 검색 결과 없을 경우 추가 처리 필요
+    if (similarSearchResult.length === 0) return;
+    const { name, latitude, longitude } = similarSearchResult[0];
+    const result = await searchNearbyPlace(name, latitude, longitude);
+    console.log(result);
+  };
+
   return (
     <RootContainer>
       <SearchContainer $focus={focus}>
@@ -115,11 +141,12 @@ export default function SearchBar() {
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}
         />
-        <SearchButton onClick={searchNearbyPlace}></SearchButton>
+        <SearchButton onClick={onSearchButtonClicked}></SearchButton>
       </SearchContainer>
       <SimilarSearchDropDown
         items={similarSearchResult}
         visible={text.length > 1 && similarSearchResult.length > 0}
+        onClick={onDropdownItemClicked}
       />
     </RootContainer>
   );
